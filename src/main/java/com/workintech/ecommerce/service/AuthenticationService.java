@@ -25,9 +25,9 @@ public class AuthenticationService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public ApplicationUser register(String fullName, String email, String password) {
+    public ApplicationUser register(String fullName, String email, String password, String address, String creditCard) {
         String encodePassword = passwordEncoder.encode(password);
-        Role customerRole = roleRepository.findByAuthority("customer").get();
+        Role customerRole = roleRepository.findByAuthority("Customer").get();
 
         Set<Role> roles = new HashSet<>();
         roles.add(customerRole);
@@ -36,6 +36,8 @@ public class AuthenticationService {
         user.setEmail(email);
         user.setFullName(fullName);
         user.setPassword(encodePassword);
+        user.setAddress(address);
+        user.setCreditCard(creditCard);
         user.setRoles(roles);
 
         return userRepository.save(user);

@@ -10,6 +10,7 @@ public class CategoryDtoConversion {
 
     public static CategoryResponseDto convertCategory(Category category) {
         return new CategoryResponseDto(
+                category.getId(),
                 category.getCode(),
                 category.getTitle(),
                 category.getImage(),
@@ -21,6 +22,7 @@ public class CategoryDtoConversion {
         List<CategoryResponseDto> categoryResponses = new ArrayList<>();
         categories.forEach(category ->
                 categoryResponses.add(new CategoryResponseDto(
+                        category.getId(),
                         category.getCode(),
                         category.getTitle(),
                         category.getImage(),

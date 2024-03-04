@@ -31,6 +31,13 @@ public class ApplicationUser implements UserDetails {
     @Column(name = "password")
     private String password;
 
+    @Column(name = "address")
+    private String address;
+
+    @Column(name = "credit_card")
+    private String creditCard;
+
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "app_user_role", schema = "ecommerce",
             joinColumns = @JoinColumn(name = "app_user_id"),
