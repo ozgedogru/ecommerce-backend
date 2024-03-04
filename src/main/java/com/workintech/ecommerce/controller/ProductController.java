@@ -14,6 +14,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/products")
 @Validated
+@CrossOrigin("*")
 public class ProductController {
 
     private final ProductService productService;
@@ -29,13 +30,13 @@ public class ProductController {
         return ResponseEntity.ok(products);
     }
     @GetMapping("/{id}")
-    public ResponseEntity<ProductResponseDto> getProductById(@PathVariable Long id) {
+    public ResponseEntity<ProductResponseDto> getProductById(@PathVariable("id") Long id) {
         ProductResponseDto product = productService.getProductById(id);
         return ResponseEntity.ok(product);
     }
 
     @PostMapping("/{categoryId}")
-    public ResponseEntity<ProductResponseDto> createProduct(@PathVariable Long categoryId, @RequestBody Product product) {
+    public ResponseEntity<ProductResponseDto> createProduct(@PathVariable("categoryId") Long categoryId, @RequestBody Product product) {
 
         ProductResponseDto createdProduct = productService.saveProduct(categoryId, product);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdProduct);

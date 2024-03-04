@@ -18,6 +18,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/categories")
 @Validated
+@CrossOrigin("*")
 public class CategoryController {
 
     private CategoryService categoryService;
@@ -34,7 +35,7 @@ public class CategoryController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CategoryResponseDto> getCategoryById(@PathVariable Long id) {
+    public ResponseEntity<CategoryResponseDto> getCategoryById(@PathVariable("id") Long id) {
         CategoryResponseDto category = categoryService.getCategoryById(id);
         return ResponseEntity.ok(category);
     }
@@ -47,13 +48,13 @@ public class CategoryController {
 
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<CategoryResponseDto> deleteCategory(@PathVariable Long id) {
+    public ResponseEntity<CategoryResponseDto> deleteCategory(@PathVariable("id") Long id) {
         CategoryResponseDto deletedCategory = categoryService.deleteCategory(id);
         return ResponseEntity.ok(deletedCategory);
     }
 
     @GetMapping("/{categoryId}/products")
-    public ResponseEntity<List<ProductResponseDto>> getProductsByCategoryId(@PathVariable Long categoryId) {
+    public ResponseEntity<List<ProductResponseDto>> getProductsByCategoryId(@PathVariable("categoryId") Long categoryId) {
         List<Product> products = categoryService.getProductsByCategoryId(categoryId);
         List<ProductResponseDto> productResponses = new ArrayList<>();
         for (Product product : products) {

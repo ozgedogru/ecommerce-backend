@@ -13,6 +13,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/stores")
 @Validated
+@CrossOrigin("*")
 public class StoreController {
 
     private StoreService storeService;

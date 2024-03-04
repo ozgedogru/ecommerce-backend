@@ -45,7 +45,7 @@ public class Product {
     @Column(name = "image")
     private String image;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "category_id")
     private Category category;
 
