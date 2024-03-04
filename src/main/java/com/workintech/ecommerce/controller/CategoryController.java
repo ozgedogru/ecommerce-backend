@@ -62,6 +62,7 @@ public class CategoryController {
                     product.getName(),
                     product.getPrice(),
                     product.getStock(),
+                    product.getImage(),
                     new CategoryResponseDto(
                             product.getCategory().getId(),
                             product.getCategory().getCode(),

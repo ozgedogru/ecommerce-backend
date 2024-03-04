@@ -13,6 +13,7 @@ public class ProductDtoConversion {
                 product.getName(),
                 product.getPrice(),
                 product.getStock(),
+                product.getImage(),
                 CategoryDtoConversion.convertCategory(product.getCategory())
         );
     }

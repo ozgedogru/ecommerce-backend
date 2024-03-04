@@ -1,9 +1,11 @@
 package com.workintech.ecommerce.controller;
 
 import com.workintech.ecommerce.dto.RegisterUserDto;
+import com.workintech.ecommerce.dto.UserInfoDto;
 import com.workintech.ecommerce.entity.ApplicationUser;
 import com.workintech.ecommerce.service.AuthenticationService;
 import com.workintech.ecommerce.service.UserService;
+import com.workintech.ecommerce.util.UserInfoDtoConversion;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,15 +28,18 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ApplicationUser>> getAllUsers() {
+    public ResponseEntity<List<UserInfoDto>> getAllUsers() {
         List<ApplicationUser> users = userService.getAllUsers();
-        return new ResponseEntity<>(users, HttpStatus.OK);
+        List<UserInfoDto> userInfoDtoList = UserInfoDtoConversion.convertUserList(users);
+        return new ResponseEntity<>(userInfoDtoList, HttpStatus.OK);
     }
 
+
     @GetMapping("/{id}")
-    public ResponseEntity<ApplicationUser> getUserById(@PathVariable("id") Long id) {
+    public ResponseEntity<UserInfoDto> getUserById(@PathVariable("id") Long id) {
         ApplicationUser user = userService.getUserById(id);
-        return new ResponseEntity<>(user, HttpStatus.OK);
+        UserInfoDto userInfoDto = UserInfoDtoConversion.convertUser(user);
+        return new ResponseEntity<>(userInfoDto, HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
