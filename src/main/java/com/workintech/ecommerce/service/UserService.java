@@ -1,5 +1,6 @@
 package com.workintech.ecommerce.service;
 
+import com.workintech.ecommerce.entity.Address;
 import com.workintech.ecommerce.entity.ApplicationUser;
 import com.workintech.ecommerce.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,12 +38,24 @@ public class UserService implements UserDetailsService {
         return userRepository.findById(id)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + id));
     }
-    
+
 
     public void deleteUserById(Long id) {
         ApplicationUser user = userRepository.findById(id)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + id));
         userRepository.delete(user);
     }
+
+
+    public void addAddressToUser(Long userId, Address address) {
+        ApplicationUser user = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + userId));
+
+        address.setUser(user);
+        user.getAddresses().add(address);
+
+        userRepository.save(user);
+    }
+
 
 }

@@ -7,7 +7,9 @@ import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 @NoArgsConstructor
@@ -31,11 +33,9 @@ public class ApplicationUser implements UserDetails {
     @Column(name = "password")
     private String password;
 
-    @Column(name = "address")
-    private String address;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Address> addresses = new ArrayList<>();
 
-    @Column(name = "credit_card")
-    private String creditCard;
 
 
     @ManyToMany(fetch = FetchType.EAGER)

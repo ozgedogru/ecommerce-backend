@@ -1,5 +1,10 @@
 package com.workintech.ecommerce.dto;
 
-public record UserInfoDto(Long id, String fullName, String email, String address, String creditCard) {
+import com.workintech.ecommerce.entity.Address;
+
+import java.util.List;
+
+public record UserInfoDto(Long id, String fullName, String email,
+                          List<AddressDto> addresses) {
 }
 

@@ -13,8 +13,7 @@ public class UserInfoDtoConversion {
                 user.getId(),
                 user.getFullName(),
                 user.getEmail(),
-                user.getAddress(),
-                user.getCreditCard());
+                AddressDtoConversion.convertAddressList(user.getAddresses()));
     }
 
     public static List<UserInfoDto> convertUserList(List<ApplicationUser> users) {

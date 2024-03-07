@@ -2,6 +2,7 @@ package com.workintech.ecommerce.controller;
 
 import com.workintech.ecommerce.dto.RegisterUserDto;
 import com.workintech.ecommerce.dto.UserInfoDto;
+import com.workintech.ecommerce.entity.Address;
 import com.workintech.ecommerce.entity.ApplicationUser;
 import com.workintech.ecommerce.service.AuthenticationService;
 import com.workintech.ecommerce.service.UserService;
@@ -50,6 +51,20 @@ public class UserController {
 
     @PostMapping("/register")
     public ApplicationUser register(@RequestBody RegisterUserDto registerUserDto) {
-        return authenticationService.register(registerUserDto.fullName(), registerUserDto.email(), registerUserDto.password(), registerUserDto.address(), registerUserDto.creditCard());
+        return authenticationService.register(registerUserDto.fullName(), registerUserDto.email(), registerUserDto.password());
     }
+
+    @GetMapping("/{id}/address")
+    public ResponseEntity<Address> getUserAddressById(@PathVariable("id") Long userId) {
+        ApplicationUser user = userService.getUserById(userId);
+        List<Address> addresses = user.getAddresses();
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("/{userId}/addresses")
+    public void addAddressToUser(@PathVariable Long userId, @RequestBody Address address) {
+        userService.addAddressToUser(userId, address);
+    }
+
+
 }

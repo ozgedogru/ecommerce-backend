@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+    //user icin handler ekle
     @ExceptionHandler
     public ResponseEntity<ErrorResponse> handle(CategoryException categoryException) {
         ErrorResponse errorResponse = new ErrorResponse(categoryException.getMessage());
