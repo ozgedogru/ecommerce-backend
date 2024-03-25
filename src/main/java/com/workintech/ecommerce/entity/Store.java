@@ -20,4 +20,7 @@ public class Store {
     @Column(name = "name")
     private String name;
 
+    @OneToOne(mappedBy = "store", cascade = CascadeType.ALL)
+    private ApplicationUser user;
+
 }

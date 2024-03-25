@@ -10,12 +10,11 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class UserService implements UserDetailsService {
 
-    private UserRepository userRepository;
+    private static UserRepository userRepository;
 
     @Autowired
     public UserService(UserRepository userRepository) {
@@ -34,7 +33,7 @@ public class UserService implements UserDetailsService {
         return userRepository.findAll();
     }
 
-    public ApplicationUser getUserById(Long id) {
+    public static ApplicationUser getUserById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + id));
     }
@@ -56,6 +55,13 @@ public class UserService implements UserDetailsService {
 
         userRepository.save(user);
     }
+
+    public List<Address> getUserAddresses(Long userId) {
+        ApplicationUser user = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + userId));
+        return user.getAddresses();
+    }
+
 
 
 }
