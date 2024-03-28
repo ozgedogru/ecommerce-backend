@@ -1,6 +1,8 @@
 package com.workintech.ecommerce.util;
 
 import com.workintech.ecommerce.dto.OrderDto;
+import com.workintech.ecommerce.dto.ProductOrderResponseDto;
+import com.workintech.ecommerce.dto.ProductResponseDto;
 import com.workintech.ecommerce.entity.Order;
 
 import java.util.List;
@@ -9,8 +11,12 @@ import java.util.stream.Collectors;
 public class OrderDtoConversion {
 
     public static OrderDto convertToDto(Order order) {
-        List<Long> productIds = order.getProducts().stream()
-                .map(product -> product.getId())
+        List<ProductOrderResponseDto> productDtos = order.getProducts().stream()
+                .map(product -> new ProductOrderResponseDto(
+                        product.getId(),
+                        product.getName(),
+                        product.getPrice(),
+                        product.getImage()))
                 .collect(Collectors.toList());
 
         return new OrderDto(
@@ -22,7 +28,7 @@ public class OrderDtoConversion {
                 order.getPrice(),
                 order.getAddress().getId(),
                 order.getUser().getId(),
-                productIds
+                productDtos
         );
     }
 
