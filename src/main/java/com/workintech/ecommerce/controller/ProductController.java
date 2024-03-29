@@ -9,7 +9,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/products")
@@ -25,10 +27,16 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ProductResponseDto>> getAllProducts() {
+    public ResponseEntity<Map<String, Object>> getAllProducts() {
         List<ProductResponseDto> products = productService.getAllProducts();
-        return ResponseEntity.ok(products);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("products", products);
+        response.put("total", products.size());
+
+        return ResponseEntity.ok(response);
     }
+
     @GetMapping("/{id}")
     public ResponseEntity<ProductResponseDto> getProductById(@PathVariable("id") Long id) {
         ProductResponseDto product = productService.getProductById(id);

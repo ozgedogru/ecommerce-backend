@@ -1,5 +1,6 @@
 package com.workintech.ecommerce.dto;
 
+import com.workintech.ecommerce.entity.Address;
 import com.workintech.ecommerce.entity.Product;
 
 import java.time.LocalDateTime;
@@ -11,7 +12,7 @@ public record OrderDto(Long id,
                        String cardNumber,
                        String expirationDate,
                        double price,
-                       Long addressId,
                        Long userId,
+                       AddressOrderResponseDto address,
                        List<ProductOrderResponseDto> products) {
 }

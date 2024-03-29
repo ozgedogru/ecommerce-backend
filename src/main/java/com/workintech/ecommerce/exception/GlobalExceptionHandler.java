@@ -22,6 +22,12 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler
+    public ResponseEntity<ErrorResponse> handle(OrderException orderException) {
+        ErrorResponse errorResponse = new ErrorResponse(orderException.getMessage());
+        return new ResponseEntity<>(errorResponse, orderException.getStatus());
+    }
+
+    @ExceptionHandler
     public ResponseEntity<ErrorResponse> handle(Exception exception) {
         ErrorResponse errorResponse = new ErrorResponse(exception.getMessage());
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);

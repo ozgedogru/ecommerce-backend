@@ -30,10 +30,13 @@ public class Product {
     private String description;
 
     @NotNull(message = "Price cannot be null")
+    @Min(value = 0, message = "Price must be at least 0")
     @Column(name = "price")
     private double price;
 
     @Column(name = "stock")
+    @NotNull(message = "Stock cannot be null")
+    @Min(value = 0, message = "Stock must be at least 0")
     private int stock;
 
     @Min(value = 0, message = "Rating value must be at least 0")
@@ -41,6 +44,7 @@ public class Product {
     @Column(name = "rating")
     private double rating;
 
+    @Min(value = 0, message = "Sell count must be at least 0")
     @Column(name = "sell_count")
     private int sellCount;
 

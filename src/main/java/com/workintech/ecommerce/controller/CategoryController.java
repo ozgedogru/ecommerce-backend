@@ -59,6 +59,7 @@ public class CategoryController {
         List<ProductResponseDto> productResponses = new ArrayList<>();
         for (Product product : products) {
             productResponses.add(new ProductResponseDto(
+                    product.getId(),
                     product.getName(),
                     product.getPrice(),
                     product.getStock(),

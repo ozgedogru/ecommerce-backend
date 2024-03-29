@@ -10,6 +10,7 @@ public class ProductDtoConversion {
 
     public static ProductResponseDto convertProduct(Product product) {
         return new ProductResponseDto(
+                product.getId(),
                 product.getName(),
                 product.getPrice(),
                 product.getStock(),

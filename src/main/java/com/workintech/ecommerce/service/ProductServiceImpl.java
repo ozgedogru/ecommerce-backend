@@ -53,7 +53,7 @@ public class ProductServiceImpl implements ProductService{
 
         Product savedProduct = productRepository.save(product);
 
-        return new ProductResponseDto(product.getName(), product.getPrice(), product.getStock(), product.getImage(), new CategoryResponseDto(category.getId(), category.getCode(),
+        return new ProductResponseDto(product.getId(), product.getName(), product.getPrice(), product.getStock(), product.getImage(), new CategoryResponseDto(category.getId(), category.getCode(),
                 category.getTitle(), category.getImage(), category.getRating(), category.getGender()));
     }
 

@@ -1,8 +1,7 @@
 package com.workintech.ecommerce.util;
 
-import com.workintech.ecommerce.dto.OrderDto;
-import com.workintech.ecommerce.dto.ProductOrderResponseDto;
-import com.workintech.ecommerce.dto.ProductResponseDto;
+import com.workintech.ecommerce.dto.*;
+import com.workintech.ecommerce.entity.Address;
 import com.workintech.ecommerce.entity.Order;
 
 import java.util.List;
@@ -19,6 +18,13 @@ public class OrderDtoConversion {
                         product.getImage()))
                 .collect(Collectors.toList());
 
+        Address address = order.getAddress();
+        AddressOrderResponseDto addressDto = new AddressOrderResponseDto(
+                address.getId(),
+                address.getNameSurname(),
+                address.getCity()
+        );
+
         return new OrderDto(
                 order.getId(),
                 order.getOrderDate(),
@@ -26,8 +32,8 @@ public class OrderDtoConversion {
                 order.getCardNumber(),
                 order.getExpirationDate(),
                 order.getPrice(),
-                order.getAddress().getId(),
                 order.getUser().getId(),
+                addressDto,
                 productDtos
         );
     }
