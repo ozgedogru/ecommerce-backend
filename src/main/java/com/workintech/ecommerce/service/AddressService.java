@@ -40,8 +40,9 @@ public class AddressService {
         return addressRepository.save(address);
     }
 
-    public void updateAddress(Long id, Address updatedAddress) {
-        Address address = addressRepository.findById(id).orElseThrow(() -> new RuntimeException("Address not found with id: " + id));
+    public Address updateAddress(Long addressId, Address updatedAddress, Long userId) {
+        Address address = addressRepository.findByIdAndUserId(addressId, userId)
+                .orElseThrow(() -> new RuntimeException("Address not found with id: " + addressId + " for user: " + userId));
         address.setAddressTitle(updatedAddress.getAddressTitle());
         address.setNameSurname(updatedAddress.getNameSurname());
         address.setPhone(updatedAddress.getPhone());
@@ -49,10 +50,15 @@ public class AddressService {
         address.setDistrict(updatedAddress.getDistrict());
         address.setNeighborhood(updatedAddress.getNeighborhood());
         address.setAddressDir(updatedAddress.getAddressDir());
-        addressRepository.save(address);
+        return addressRepository.save(address);
     }
 
-    public void deleteAddress(Long id) {
-        addressRepository.deleteById(id);
+    public void deleteAddress(Long addressId) {
+        Optional<Address> addressOptional = addressRepository.findById(addressId);
+        if (addressOptional.isPresent()) {
+            addressRepository.delete(addressOptional.get());
+        } else {
+            throw new RuntimeException("Address not found with id: " + addressId);
+        }
     }
 }
