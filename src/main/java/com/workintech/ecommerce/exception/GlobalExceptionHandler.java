@@ -28,6 +28,12 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler
+    public ResponseEntity<ErrorResponse> handle(UserException userException) {
+        ErrorResponse errorResponse = new ErrorResponse(userException.getMessage());
+        return new ResponseEntity<>(errorResponse, userException.getStatus());
+    }
+
+    @ExceptionHandler
     public ResponseEntity<ErrorResponse> handle(Exception exception) {
         ErrorResponse errorResponse = new ErrorResponse(exception.getMessage());
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
