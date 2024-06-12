@@ -38,6 +38,10 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + id));
     }
 
+    public ApplicationUser getUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+    }
 
     public void deleteUserById(Long id) {
         ApplicationUser user = userRepository.findById(id)
