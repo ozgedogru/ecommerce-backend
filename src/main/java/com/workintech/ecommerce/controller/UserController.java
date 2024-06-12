@@ -1,18 +1,22 @@
 package com.workintech.ecommerce.controller;
 
+import com.workintech.ecommerce.config.JwtTokenUtil;
 import com.workintech.ecommerce.dto.*;
 import com.workintech.ecommerce.entity.Address;
 import com.workintech.ecommerce.entity.ApplicationUser;
 import com.workintech.ecommerce.entity.Order;
 import com.workintech.ecommerce.entity.Payment;
+import com.workintech.ecommerce.exception.UserException;
 import com.workintech.ecommerce.service.*;
-import com.workintech.ecommerce.util.AddressDtoConversion;
-import com.workintech.ecommerce.util.OrderDtoConversion;
-import com.workintech.ecommerce.util.PaymentDtoConversion;
-import com.workintech.ecommerce.util.UserInfoDtoConversion;
+import com.workintech.ecommerce.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,14 +34,18 @@ public class UserController {
     private AddressService addressService;
     private PaymentService paymentService;
     private OrderService orderService;
+    private AuthenticationManager authenticationManager;
+    private JwtTokenUtil jwtTokenUtil;
 
     @Autowired
-    public UserController(UserService userService, AuthenticationService authenticationService, AddressService addressService, PaymentService paymentService, OrderService orderService) {
+    public UserController(UserService userService, AuthenticationService authenticationService, AddressService addressService, PaymentService paymentService, OrderService orderService, AuthenticationManager authenticationManager, JwtTokenUtil jwtTokenUtil) {
         this.userService = userService;
         this.authenticationService = authenticationService;
         this.addressService = addressService;
         this.paymentService = paymentService;
         this.orderService = orderService;
+        this.authenticationManager = authenticationManager;
+        this.jwtTokenUtil = jwtTokenUtil;
     }
 
     @GetMapping
@@ -50,7 +58,7 @@ public class UserController {
 
     @GetMapping("/{userId}")
     public ResponseEntity<UserInfoDto> getUserById(@PathVariable("userId") Long id) {
-        ApplicationUser user = userService.getUserById(id);
+        ApplicationUser user = UserService.getUserById(id);
         UserInfoDto userInfoDto = UserInfoDtoConversion.convertUser(user);
         return new ResponseEntity<>(userInfoDto, HttpStatus.OK);
     }
@@ -62,51 +70,92 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Void> register(@RequestBody RegisterUserDto registerUserDto) {
-        authenticationService.register(registerUserDto.fullName(),
+    public ResponseEntity<RegisterResponseDto> register(@RequestBody RegisterUserDto registerUserDto) {
+       ApplicationUser registeredUser = authenticationService.register(registerUserDto.fullName(),
                 registerUserDto.email(),
                 registerUserDto.password(),
                 registerUserDto.roleId(),
                 registerUserDto.store());
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+
+        RegisterResponseDto responseDto = RegisterDtoConversion.convertUser(registeredUser);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
     }
 
 
-    @GetMapping("/address/{addressId}")
-    public ResponseEntity<AddressDto> getAddressById(@PathVariable Long addressId) {
+    @PostMapping("/login")
+    public ResponseEntity<AuthenticationResponseDto> login(@RequestBody LoginUserDto loginUserDto) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginUserDto.email(), loginUserDto.password())
+            );
+
+            final UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+
+            final String token = jwtTokenUtil.generateToken(userDetails.getUsername());
+
+            return ResponseEntity.ok(new AuthenticationResponseDto(token));
+        } catch (BadCredentialsException e) {
+            throw new UserException("Invalid username or password.", HttpStatus.UNAUTHORIZED);
+        } catch (AuthenticationException e) {
+            throw new UserException("An error occurred during authentication. Please try again.", HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+
+
+    @GetMapping("/address")
+    public ResponseEntity<AddressDto> getAddressById(Authentication authentication, @PathVariable Long addressId) {
+        ApplicationUser user = (ApplicationUser) authentication.getPrincipal();
+        Long userId = user.getId();
+
+
         Optional<Address> address = addressService.getAddressById(addressId);
         return address.map(value -> new ResponseEntity<>(AddressDtoConversion.convertAddress(value), HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-    @GetMapping("/{userId}/addresses")
-    public ResponseEntity<List<AddressDto>> getAllAddressesByUserId(@PathVariable("userId") Long userId) {
+    @GetMapping("/addresses")
+    public ResponseEntity<List<AddressDto>> getAllAddressesByUserId(Authentication authentication) {
+        ApplicationUser user = (ApplicationUser) authentication.getPrincipal();
+        Long userId = user.getId();
+
         List<Address> addresses = addressService.getAllAddressesByUserId(userId);
         List<AddressDto> addressDtos = AddressDtoConversion.convertAddressList(addresses);
         return new ResponseEntity<>(addressDtos, HttpStatus.OK);
     }
 
-    @PostMapping("/{userId}/address")
-    public ResponseEntity<AddressDto> createAddress(@RequestBody Address address, @PathVariable Long userId) {
+    @PostMapping("/address")
+    public ResponseEntity<AddressDto> createAddress(Authentication authentication, @RequestBody Address address) {
+        ApplicationUser user = (ApplicationUser) authentication.getPrincipal();
+        Long userId = user.getId();
+
         Address createdAddress = addressService.createAddress(address, userId);
         AddressDto createdAddressDto = AddressDtoConversion.convertAddress(createdAddress);
         return new ResponseEntity<>(createdAddressDto, HttpStatus.CREATED);
     }
 
     @PutMapping("/address/{addressId}")
-    public ResponseEntity<String> updateAddress(@PathVariable("addressId") Long id, @RequestBody Address updatedAddress) {
+    public ResponseEntity<AddressDto> updateAddress(Authentication authentication, @PathVariable Long addressId, @RequestBody Address updatedAddress) {
+        ApplicationUser user = (ApplicationUser) authentication.getPrincipal();
+        Long userId = user.getId();
         try {
-            addressService.updateAddress(id, updatedAddress);
-            return ResponseEntity.ok("Address updated successfully.");
+            Address updatedAddressEntity = addressService.updateAddress(addressId, updatedAddress, userId);
+            AddressDto updatedAddressDto = AddressDtoConversion.convertAddress(updatedAddressEntity);
+            return new ResponseEntity<>(updatedAddressDto, HttpStatus.OK);
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
     }
 
-    @DeleteMapping("/address/{id}")
-    public ResponseEntity<String> deleteAddress(@PathVariable Long id) {
+
+    @DeleteMapping("/address/{addressId}")
+    public ResponseEntity<String> deleteAddress(Authentication authentication, @PathVariable Long addressId) {
+        ApplicationUser user = (ApplicationUser) authentication.getPrincipal();
+        Long userId = user.getId();
+
         try {
-            addressService.deleteAddress(id);
+            addressService.deleteAddress(addressId);
             return ResponseEntity.ok("Address deleted successfully.");
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -114,29 +163,41 @@ public class UserController {
     }
 
 
-    @GetMapping("/{userId}/payments")
-    public ResponseEntity<List<PaymentDto>> getAllPaymentsByUserId(@PathVariable("userId") Long userId) {
+    @GetMapping("/payments")
+    public ResponseEntity<List<PaymentDto>> getAllPaymentsByUserId(Authentication authentication) {
+        ApplicationUser user = (ApplicationUser) authentication.getPrincipal();
+        Long userId = user.getId();
+
         List<Payment> payments = paymentService.getAllPaymentsByUserId(userId);
         List<PaymentDto> paymentDtos = PaymentDtoConversion.convertPaymentList(payments);
         return new ResponseEntity<>(paymentDtos, HttpStatus.OK);
     }
 
-    @PostMapping("/{userId}/payments")
-    public ResponseEntity<PaymentDto> createPayment(@RequestBody Payment payment, @PathVariable("userId") Long userId) {
+    @PostMapping("/payments")
+    public ResponseEntity<PaymentDto> createPayment(Authentication authentication, @RequestBody Payment payment) {
+        ApplicationUser user = (ApplicationUser) authentication.getPrincipal();
+        Long userId = user.getId();
+
         Payment createdPayment = paymentService.createPayment(payment, userId);
         PaymentDto createdPaymentDto = PaymentDtoConversion.convertToDto(createdPayment);
         return new ResponseEntity<>(createdPaymentDto, HttpStatus.CREATED);
     }
 
     @PutMapping("/payments/{paymentId}")
-    public ResponseEntity<PaymentDto> updatePayment(@PathVariable("paymentId") Long paymentId, @RequestBody Payment payment) {
+    public ResponseEntity<PaymentDto> updatePayment(Authentication authentication, @PathVariable Long paymentId, @RequestBody Payment payment) {
+        ApplicationUser user = (ApplicationUser) authentication.getPrincipal();
+        Long userId = user.getId();
+
         Payment updatedPayment = paymentService.updatePayment(paymentId, payment);
         PaymentDto updatedPaymentDto = PaymentDtoConversion.convertToDto(updatedPayment);
         return new ResponseEntity<>(updatedPaymentDto, HttpStatus.OK);
     }
 
     @DeleteMapping("/payments/{paymentId}")
-    public ResponseEntity<String> deletePayment(@PathVariable("paymentId") Long paymentId) {
+    public ResponseEntity<String> deletePayment(Authentication authentication, @PathVariable("paymentId") Long paymentId) {
+        ApplicationUser user = (ApplicationUser) authentication.getPrincipal();
+        Long userId = user.getId();
+
         try {
             paymentService.deletePayment(paymentId);
             return ResponseEntity.ok("Payment deleted successfully.");
@@ -147,27 +208,41 @@ public class UserController {
 
 
 
-    @GetMapping("/{userId}/orders")
-    public ResponseEntity<List<OrderDto>> getAllOrdersByUserId(@PathVariable("userId") Long userId) {
+//TODO: Add exception handler here
+    @GetMapping("/orders")
+    public ResponseEntity<List<OrderDto>> getAllOrders() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        ApplicationUser user = (ApplicationUser) authentication.getPrincipal();
+        Long userId = user.getId();
+
         List<Order> orders = orderService.getOrdersById(userId);
+
         List<OrderDto> orderDtos = OrderDtoConversion.convertOrderList(orders);
+
         return new ResponseEntity<>(orderDtos, HttpStatus.OK);
     }
 
-    @PostMapping("/{userId}/orders")
-    public ResponseEntity<OrderDto> createOrder(@RequestBody Order order, @PathVariable("userId") Long userId) {
-        order.setUser(UserService.getUserById(userId));
-        Order createdOrder = orderService.createOrder(order, userId);
-        OrderDto createdOrderDto = OrderDtoConversion.convertToDto(createdOrder);
-        return new ResponseEntity<>(createdOrderDto, HttpStatus.CREATED);
+
+    @PostMapping("/orders")
+    public ResponseEntity<?> createOrder(@RequestBody Order order) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !(authentication.getPrincipal() instanceof ApplicationUser)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication failed");
+        }
+
+            ApplicationUser user = (ApplicationUser) authentication.getPrincipal();
+            Long userId = user.getId();
+
+            order.setUser(UserService.getUserById(userId));
+            Order createdOrder = orderService.createOrder(order, userId);
+
+            OrderDto createdOrderDto = OrderDtoConversion.convertToDto(createdOrder);
+
+            return new ResponseEntity<>(createdOrderDto, HttpStatus.CREATED);
+
     }
 
-    @PutMapping("/orders/{orderId}")
-    public ResponseEntity<OrderDto> updateOrder(@PathVariable("orderId") Long orderId, @RequestBody Order order) {
-        Order updatedOrder = orderService.updateOrder(orderId, order);
-        OrderDto updatedOrderDto = OrderDtoConversion.convertToDto(updatedOrder);
-        return new ResponseEntity<>(updatedOrderDto, HttpStatus.OK);
-    }
 
     @DeleteMapping("/orders/{orderId}")
     public ResponseEntity<String> deleteOrder(@PathVariable("orderId") Long orderId) {
