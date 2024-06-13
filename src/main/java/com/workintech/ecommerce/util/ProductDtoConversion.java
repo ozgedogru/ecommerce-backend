@@ -12,8 +12,10 @@ public class ProductDtoConversion {
         return new ProductResponseDto(
                 product.getId(),
                 product.getName(),
+                product.getDescription(),
                 product.getPrice(),
                 product.getStock(),
+                product.getRating(),
                 product.getImage(),
                 CategoryDtoConversion.convertCategory(product.getCategory())
         );

@@ -21,8 +21,10 @@ public class OrderDtoConversion {
         Address address = order.getAddress();
         AddressOrderResponseDto addressDto = new AddressOrderResponseDto(
                 address.getId(),
+                address.getAddressTitle(),
                 address.getNameSurname(),
-                address.getCity()
+                address.getCity(),
+                address.getDistrict()
         );
 
         return new OrderDto(
