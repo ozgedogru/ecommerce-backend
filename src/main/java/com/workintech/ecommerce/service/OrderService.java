@@ -19,6 +19,11 @@ public class OrderService {
         this.orderRepository = orderRepository;
     }
 
+
+    public Order getOrderById(Long orderId) {
+        return orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+    }
     public List<Order> getOrdersById(Long userId) {
         return orderRepository.findByUserId(userId);
     }

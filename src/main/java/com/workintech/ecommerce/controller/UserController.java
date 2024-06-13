@@ -243,6 +243,17 @@ public class UserController {
 
     }
 
+    @GetMapping("/orders/{orderId}")
+    public ResponseEntity<OrderDto> getOrderById(@PathVariable("orderId") Long orderId) {
+        try {
+            Order order = orderService.getOrderById(orderId);
+            OrderDto orderDto = OrderDtoConversion.convertToDto(order);
+            return ResponseEntity.ok(orderDto);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+    }
+
 
     @DeleteMapping("/orders/{orderId}")
     public ResponseEntity<String> deleteOrder(@PathVariable("orderId") Long orderId) {
