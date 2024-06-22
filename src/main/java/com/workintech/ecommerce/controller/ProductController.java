@@ -27,12 +27,27 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<Map<String, Object>> getAllProducts() {
-        List<ProductResponseDto> products = productService.getAllProducts();
+    public ResponseEntity<Map<String, Object>> getProducts(
+            @RequestParam(defaultValue = "0") int offset,
+            @RequestParam(defaultValue = "5") int limit,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String filter,
+            @RequestParam(required = false) String sort){
+
+        List<ProductResponseDto> products;
+        long total;
+
+        if (categoryId != null || filter != null || sort != null) {
+            products = productService.getFilteredAndSortedProducts(categoryId, filter, sort, offset, limit);
+            total = productService.getTotalFilteredProductCount(categoryId, filter);
+        } else {
+            products = productService.getAllProducts(offset, limit);
+            total = productService.getTotalProductCount();
+        }
 
         Map<String, Object> response = new HashMap<>();
         response.put("products", products);
-        response.put("total", products.size());
+        response.put("total", total);
 
         return ResponseEntity.ok(response);
     }
@@ -63,4 +78,6 @@ public class ProductController {
         ProductResponseDto deletedProduct = productService.deleteProduct(id);
         return ResponseEntity.ok(deletedProduct);
     }
+
+
 }
