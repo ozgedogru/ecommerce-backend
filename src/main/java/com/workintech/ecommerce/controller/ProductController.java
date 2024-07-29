@@ -27,8 +27,12 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<Map<String, Object>> getAllProducts() {
-        List<ProductResponseDto> products = productService.getAllProducts();
+    public ResponseEntity<Map<String, Object>> getProducts(
+            @RequestParam(value = "categoryId", required = false) Long categoryId,
+            @RequestParam(value = "filter", required = false) String filter,
+            @RequestParam(value = "sort", required = false) String sort) {
+
+        List<ProductResponseDto> products = productService.getProducts(categoryId, filter, sort);
 
         Map<String, Object> response = new HashMap<>();
         response.put("products", products);

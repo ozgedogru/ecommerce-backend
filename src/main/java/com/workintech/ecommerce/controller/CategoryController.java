@@ -61,8 +61,10 @@ public class CategoryController {
             productResponses.add(new ProductResponseDto(
                     product.getId(),
                     product.getName(),
+                    product.getDescription(),
                     product.getPrice(),
                     product.getStock(),
+                    product.getRating(),
                     product.getImage(),
                     new CategoryResponseDto(
                             product.getCategory().getId(),

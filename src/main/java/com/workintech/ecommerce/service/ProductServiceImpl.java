@@ -19,18 +19,53 @@ public class ProductServiceImpl implements ProductService{
     private ProductRepository productRepository;
     private CategoryService categoryService;
 
+    @Autowired
     public ProductServiceImpl(ProductRepository productRepository, CategoryService categoryService) {
         this.productRepository = productRepository;
         this.categoryService = categoryService;
     }
 
-    @Autowired
-
-
     @Override
-    public List<ProductResponseDto> getAllProducts() {
-        List<Product> products = productRepository.findAll();
+    public List<ProductResponseDto> getProducts(Long categoryId, String filter, String sort) {
+        List<Product> products;
+
+        if (categoryId != null) {
+            if (filter != null && !filter.isEmpty()) {
+                products = productRepository.findByCategoryIdAndFilter(categoryId, filter);
+            } else {
+                products = productRepository.findByCategoryId(categoryId);
+            }
+        } else {
+            if (filter != null && !filter.isEmpty()) {
+                products = productRepository.findByFilter(filter);
+            } else {
+                products = productRepository.findAll();
+            }
+        }
+
+        if (sort != null && !sort.isEmpty()) {
+            String[] sortParams = sort.split(":");
+            if (sortParams.length == 2) {
+                String sortField = sortParams[0];
+                String sortDirection = sortParams[1];
+                products.sort("asc".equalsIgnoreCase(sortDirection) ?
+                        (p1, p2) -> compare(p1, p2, sortField) :
+                        (p1, p2) -> compare(p2, p1, sortField));
+            }
+        }
+
         return ProductDtoConversion.convertProductList(products);
+    }
+
+    private int compare(Product p1, Product p2, String field) {
+        switch (field) {
+            case "price":
+                return Double.compare(p1.getPrice(), p2.getPrice());
+            case "rating":
+                return Double.compare(p1.getRating(), p2.getRating());
+            default:
+                return p1.getName().compareToIgnoreCase(p2.getName());
+        }
     }
 
     @Override
@@ -53,7 +88,7 @@ public class ProductServiceImpl implements ProductService{
 
         Product savedProduct = productRepository.save(product);
 
-        return new ProductResponseDto(product.getId(), product.getName(), product.getPrice(), product.getStock(), product.getImage(), new CategoryResponseDto(category.getId(), category.getCode(),
+        return new ProductResponseDto(product.getId(), product.getName(), product.getDescription(), product.getPrice(), product.getStock(), product.getRating(), product.getImage(), new CategoryResponseDto(category.getId(), category.getCode(),
                 category.getTitle(), category.getImage(), category.getRating(), category.getGender()));
     }
 
