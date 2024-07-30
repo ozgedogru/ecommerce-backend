@@ -4,6 +4,7 @@ import com.workintech.ecommerce.dto.ProductResponseDto;
 import com.workintech.ecommerce.entity.Product;
 import com.workintech.ecommerce.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -30,13 +31,16 @@ public class ProductController {
     public ResponseEntity<Map<String, Object>> getProducts(
             @RequestParam(value = "categoryId", required = false) Long categoryId,
             @RequestParam(value = "filter", required = false) String filter,
-            @RequestParam(value = "sort", required = false) String sort) {
+            @RequestParam(value = "sort", required = false) String sort,
+            @RequestParam(value = "limit", defaultValue = "10") int limit,
+            @RequestParam(value = "offset", defaultValue = "0") int offset) {
 
-        List<ProductResponseDto> products = productService.getProducts(categoryId, filter, sort);
+        Page<ProductResponseDto> page = productService.getProducts(categoryId, filter, sort, limit, offset);
 
         Map<String, Object> response = new HashMap<>();
-        response.put("products", products);
-        response.put("total", products.size());
+        response.put("products", page.getContent());
+        response.put("total", page.getTotalElements());
+
 
         return ResponseEntity.ok(response);
     }

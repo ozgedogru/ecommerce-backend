@@ -7,12 +7,19 @@ import com.workintech.ecommerce.entity.Product;
 import com.workintech.ecommerce.exception.ProductException;
 import com.workintech.ecommerce.repository.ProductRepository;
 import com.workintech.ecommerce.util.ProductDtoConversion;
+import jakarta.persistence.criteria.Predicate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductServiceImpl implements ProductService{
@@ -26,47 +33,40 @@ public class ProductServiceImpl implements ProductService{
     }
 
     @Override
-    public List<ProductResponseDto> getProducts(Long categoryId, String filter, String sort) {
-        List<Product> products;
-
-        if (categoryId != null) {
-            if (filter != null && !filter.isEmpty()) {
-                products = productRepository.findByCategoryIdAndFilter(categoryId, filter);
-            } else {
-                products = productRepository.findByCategoryId(categoryId);
-            }
-        } else {
-            if (filter != null && !filter.isEmpty()) {
-                products = productRepository.findByFilter(filter);
-            } else {
-                products = productRepository.findAll();
-            }
-        }
+    public Page<ProductResponseDto> getProducts(Long categoryId, String filter, String sort, int limit, int offset) {
+        Sort.Direction sortDirection = Sort.Direction.ASC;
+        String sortField = "id";
 
         if (sort != null && !sort.isEmpty()) {
-            String[] sortParams = sort.split(":");
-            if (sortParams.length == 2) {
-                String sortField = sortParams[0];
-                String sortDirection = sortParams[1];
-                products.sort("asc".equalsIgnoreCase(sortDirection) ?
-                        (p1, p2) -> compare(p1, p2, sortField) :
-                        (p1, p2) -> compare(p2, p1, sortField));
+            sortDirection = (sort.toLowerCase().contains("desc")) ? Sort.Direction.DESC : Sort.Direction.ASC;
+            if (sort.contains(":")) {
+                sortField = sort.split(":")[0];
             }
         }
 
-        return ProductDtoConversion.convertProductList(products);
+        Pageable pageable = PageRequest.of(offset / limit, limit, Sort.by(sortDirection, sortField));
+
+        Specification<Product> spec = (root, query, criteriaBuilder) -> {
+            Predicate predicate = criteriaBuilder.conjunction();
+
+            if (categoryId != null) {
+                predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get("category").get("id"), categoryId));
+            }
+
+            if (filter != null && !filter.isEmpty()) {
+                Predicate namePredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + filter.toLowerCase() + "%");
+                Predicate descriptionPredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("description")), "%" + filter.toLowerCase() + "%");
+                predicate = criteriaBuilder.and(predicate, criteriaBuilder.or(namePredicate, descriptionPredicate));
+            }
+
+            return predicate;
+        };
+
+        Page<Product> productsPage = productRepository.findAll(spec, pageable);
+
+        return productsPage.map(ProductDtoConversion::convertProduct);
     }
 
-    private int compare(Product p1, Product p2, String field) {
-        switch (field) {
-            case "price":
-                return Double.compare(p1.getPrice(), p2.getPrice());
-            case "rating":
-                return Double.compare(p1.getRating(), p2.getRating());
-            default:
-                return p1.getName().compareToIgnoreCase(p2.getName());
-        }
-    }
 
     @Override
     public ProductResponseDto getProductById(Long id) {
